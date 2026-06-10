@@ -20,7 +20,7 @@ jobs:
         run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
 
       - name: Build EXE
-        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.ico MangaApp.py
 
       - name: Carica EXE
         uses: actions/upload-artifact@v4
@@ -44,7 +44,7 @@ jobs:
         run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
 
       - name: Build Linux
-        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.png MangaApp.py
 
       - name: Carica binario Linux
         uses: actions/upload-artifact@v4
@@ -65,7 +65,7 @@ jobs:
         run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
 
       - name: Build macOS
-        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.png MangaApp.py
 
       - name: Carica binario macOS
         uses: actions/upload-artifact@v4

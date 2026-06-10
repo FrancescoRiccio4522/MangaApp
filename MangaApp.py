@@ -1,10 +1,16 @@
 import os
+import sys
 import threading
 import requests
 from bs4 import BeautifulSoup
-from PIL import Image
+from PIL import Image, ImageTk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+
+
+def _resource(relative_path):
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relative_path)
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -22,6 +28,13 @@ class MangaApp(ctk.CTk):
         self.title("🏴‍☠️ Manga Downloader")
         self.geometry("700x620")
         self.resizable(False, False)
+
+        try:
+            icon_path = _resource("icon.png")
+            img = ImageTk.PhotoImage(Image.open(icon_path))
+            self.iconphoto(True, img)
+        except Exception:
+            pass
 
         # Header
         header = ctk.CTkLabel(

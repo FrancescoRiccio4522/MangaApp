@@ -5,7 +5,7 @@ a = Analysis(
     ['MangaApp.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('icon.png', '.')],
     hiddenimports=['customtkinter', 'PIL', 'PIL.Image', 'bs4', 'requests'],
     hookspath=[],
     hooksconfig={},
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='icon.ico',
 )
