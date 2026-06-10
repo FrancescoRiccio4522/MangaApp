@@ -162,26 +162,37 @@ class MangaApp(ctk.CTk):
             return None
 
         soup = BeautifulSoup(risposta.text, "html.parser")
-        immagini = [
-            img for img in soup.find_all("img")
-            if (src := img.get("data-src") or img.get("src"))
-            and ("manga" in src or "cdn" in src)
-            and not src.endswith(".gif")
-        ]
 
-        totale = len(immagini)
+        ATTRS = ["data-src", "data-lazy-src", "data-original", "data-url", "data-cfsrc", "src"]
+        ESTENSIONI_VALIDE = (".jpg", ".jpeg", ".png", ".webp")
+
+        def estrai_src(img_tag):
+            for attr in ATTRS:
+                val = img_tag.get(attr, "").strip()
+                if val and any(val.lower().split("?")[0].endswith(ext) for ext in ESTENSIONI_VALIDE):
+                    return val
+            return None
+
+        immagini_src = []
+        for img in soup.find_all("img"):
+            src = estrai_src(img)
+            if src and src not in immagini_src:
+                immagini_src.append(src)
+
+        self.after(0, lambda: self._log(f"🔍 Trovate {len(immagini_src)} immagini candidate nella pagina."))
+
+        totale = len(immagini_src)
         if totale == 0:
             self.after(0, lambda: self._log("❌ Nessuna tavola trovata nella pagina."))
             return None
 
-        self.after(0, lambda: self._log(f"Trovate {totale} tavole. Inizio download..."))
+        self.after(0, lambda: self._log(f"Inizio download..."))
         contatore = 1
 
-        for i, img in enumerate(immagini):
-            src = img.get("data-src") or img.get("src")
+        for i, src in enumerate(immagini_src):
             try:
-                img_risposta = requests.get(src, headers=self.headers)
-                if img_risposta.status_code == 200:
+                img_risposta = requests.get(src, headers=self.headers, timeout=15)
+                if img_risposta.status_code == 200 and len(img_risposta.content) > 5000:
                     estensione = ".png" if ".png" in src else ".webp" if ".webp" in src else ".jpg"
                     nome_file = os.path.join(percorso_completo, f"{contatore:03d}{estensione}")
                     with open(nome_file, "wb") as f:
@@ -189,8 +200,9 @@ class MangaApp(ctk.CTk):
                     n = contatore
                     self.after(0, lambda n=n: self._log(f"  ✅ Tavola {n:02d} salvata"))
                     contatore += 1
-                else:
-                    self.after(0, lambda: self._log(f"  ⚠️ Tavola saltata (errore {img_risposta.status_code})"))
+                elif img_risposta.status_code != 200:
+                    self.after(0, lambda: self._log(f"  ⚠️ Saltata (HTTP {img_risposta.status_code})"))
+                # else: immagine troppo piccola (icona/logo), ignorata silenziosamente
             except Exception as e:
                 self.after(0, lambda e=e: self._log(f"  ⚠️ Errore: {e}"))
 
