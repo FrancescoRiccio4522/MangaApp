@@ -174,12 +174,25 @@ class MangaApp(ctk.CTk):
             return None
 
         immagini_src = []
+
+        # Cerca in tutti i tag <img> normali
         for img in soup.find_all("img"):
             src = estrai_src(img)
             if src and src not in immagini_src:
                 immagini_src.append(src)
 
-        self.after(0, lambda: self._log(f"🔍 Trovate {len(immagini_src)} immagini candidate nella pagina."))
+        # Cerca anche dentro tag <noscript> (lazy loading comune)
+        for noscript in soup.find_all("noscript"):
+            inner = BeautifulSoup(noscript.get_text(), "html.parser")
+            for img in inner.find_all("img"):
+                src = estrai_src(img)
+                if src and src not in immagini_src:
+                    immagini_src.append(src)
+
+        # Debug: mostra tutti i tag img trovati nel log
+        tutti_img = soup.find_all("img")
+        self.after(0, lambda n=len(tutti_img): self._log(f"🔍 Tag <img> totali nella pagina: {n}"))
+        self.after(0, lambda n=len(immagini_src): self._log(f"🔍 Con URL immagine valido: {n}"))
 
         totale = len(immagini_src)
         if totale == 0:
