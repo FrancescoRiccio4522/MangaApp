@@ -6,12 +6,13 @@ Scarica capitoli manga da internet e convertili in PDF con un click.
 
 ## Download
 
-Vai alla pagina [**Releases**](https://github.com/FrancescoRiccio4522/MangaApp/actions) oppure scarica direttamente dall'ultima build:
+Vai alla pagina [**Actions**](https://github.com/FrancescoRiccio4522/MangaApp/actions) → ultima build → sezione **Artifacts**:
 
 | Sistema | File da scaricare |
 |---|---|
 | **Windows** | `MangaApp-Windows.zip` → estrai → `MangaApp.exe` |
 | **Linux** | `MangaApp-Linux.zip` → estrai → `MangaApp` |
+| **macOS** | `MangaApp-macOS.zip` → estrai → `MangaApp` |
 
 ---
 
@@ -32,6 +33,16 @@ Vai alla pagina [**Releases**](https://github.com/FrancescoRiccio4522/MangaApp/a
    ./MangaApp
    ```
    Oppure doppio click sul file (potrebbe richiedere di abilitare "Esegui come programma" nelle proprietà)
+
+### macOS
+1. Scarica `MangaApp-macOS.zip`
+2. Estrai lo zip
+3. Apri terminale nella cartella ed esegui:
+   ```bash
+   chmod +x MangaApp
+   ./MangaApp
+   ```
+   Se macOS blocca l'app ("sviluppatore non verificato") → **Impostazioni di Sistema → Privacy e Sicurezza → Apri comunque**
 
 ---
 
