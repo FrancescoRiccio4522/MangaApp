@@ -1,0 +1,53 @@
+name: Build MangaApp
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # permette lancio manuale dal sito GitHub
+
+jobs:
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
+
+      - name: Build EXE
+        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+
+      - name: Carica EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaApp-Windows
+          path: dist/MangaApp.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze sistema
+        run: sudo apt-get install -y python3-tk
+
+      - name: Installa dipendenze Python
+        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
+
+      - name: Build Linux
+        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+
+      - name: Carica binario Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaApp-Linux
+          path: dist/MangaApp
