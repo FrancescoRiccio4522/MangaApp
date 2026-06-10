@@ -51,3 +51,24 @@ jobs:
         with:
           name: MangaApp-Linux
           path: dist/MangaApp
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa dipendenze
+        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
+
+      - name: Build macOS
+        run: pyinstaller --onefile --windowed --name MangaApp MangaApp.py
+
+      - name: Carica binario macOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: MangaApp-macOS
+          path: dist/MangaApp
