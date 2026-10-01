@@ -3,12 +3,28 @@ name: Build MangaApp
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:  # permette lancio manuale dal sito GitHub
 
 jobs:
-
-  build-windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: MangaApp-Windows
+            file: dist/MangaApp.exe
+          - os: ubuntu-latest
+            artifact: MangaApp-Linux
+            file: dist/MangaApp
+          - os: macos-latest      # Mac con chip Apple (M1, M2, M3, M4…)
+            artifact: MangaApp-macOS-AppleSilicon
+            file: dist/MangaApp.dmg
+          - os: macos-15-intel    # Mac con processore Intel
+            artifact: MangaApp-macOS-Intel
+            file: dist/MangaApp.dmg
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -16,59 +32,63 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Installa dipendenze
-        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
-
-      - name: Build EXE
-        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.ico MangaApp.py
-
-      - name: Carica EXE
-        uses: actions/upload-artifact@v4
-        with:
-          name: MangaApp-Windows
-          path: dist/MangaApp.exe
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Installa dipendenze sistema
-        run: sudo apt-get install -y python3-tk
+      - name: Installa dipendenze di sistema (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
 
       - name: Installa dipendenze Python
-        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
+        run: pip install -r requirements.txt pyinstaller
 
-      - name: Build Linux
-        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.png MangaApp.py
+      - name: Build
+        run: pyinstaller --noconfirm MangaApp.spec
 
-      - name: Carica binario Linux
+      - name: Firma ad-hoc e verifica bundle (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          codesign --force --deep --sign - dist/MangaApp.app
+          codesign --verify --deep --strict --verbose=2 dist/MangaApp.app
+
+      # Apre davvero la finestra e la chiude dopo 2 secondi: se manca qualcosa nel bundle fallisce qui
+      - name: Prova di avvio (macOS)
+        if: runner.os == 'macOS'
+        timeout-minutes: 2
+        env:
+          MANGAAPP_SMOKE_TEST: "1"
+        run: dist/MangaApp.app/Contents/MacOS/MangaApp
+
+      - name: Prova di avvio (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 2
+        env:
+          MANGAAPP_SMOKE_TEST: "1"
+        run: xvfb-run -a dist/MangaApp
+
+      - name: Prova di avvio (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 2
+        env:
+          MANGAAPP_SMOKE_TEST: "1"
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\MangaApp.exe -Wait -PassThru
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
+
+      - name: Crea DMG (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir dmg
+          ditto dist/MangaApp.app dmg/MangaApp.app
+          ln -s /Applications dmg/Applications
+          # hdiutil sui runner a volte risponde "Resource busy": riprova
+          for i in 1 2 3; do
+            hdiutil create -volname MangaApp -srcfolder dmg -ov -format UDZO dist/MangaApp.dmg && break
+            sleep 5
+          done
+          test -f dist/MangaApp.dmg
+
+      - name: Carica ${{ matrix.artifact }}
         uses: actions/upload-artifact@v4
         with:
-          name: MangaApp-Linux
-          path: dist/MangaApp
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Installa dipendenze
-        run: pip install pyinstaller customtkinter pillow requests beautifulsoup4
-
-      - name: Build macOS
-        run: pyinstaller --onefile --windowed --name MangaApp --icon icon.png MangaApp.py
-
-      - name: Carica binario macOS
-        uses: actions/upload-artifact@v4
-        with:
-          name: MangaApp-macOS
-          path: dist/MangaApp
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.file }}
+          if-no-files-found: error
