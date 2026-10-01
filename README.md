@@ -166,5 +166,6 @@ pyinstaller --noconfirm MangaApp.spec
 ```
 
 Cambiare icona: `python3 tools/crea_icone.py nuova_icona.png` rigenera `icon.png`, `icon.icns` (macOS) e `icon.ico` (Windows).
+L'icona attuale è stata creata da `tools/icona-sorgente.jpg` con `--box 609,154,1391,936` (solo il disegno, senza la cornice bianca).
 
 Ogni push su un qualsiasi branch avvia la build su GitHub Actions per tutti i sistemi, con una prova di avvio dell'app.
