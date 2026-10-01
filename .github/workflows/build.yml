@@ -1,9 +1,7 @@
 name: Build MangaApp
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  push:               # ogni push su qualsiasi branch crea una versione scaricabile
   workflow_dispatch:  # permette lancio manuale dal sito GitHub
 
 jobs:
